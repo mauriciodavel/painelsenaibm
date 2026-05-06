@@ -3,11 +3,5 @@
   "devCommand": "npm run dev",
   "framework": "nextjs",
   "outputDirectory": ".next",
-  "installCommand": "npm ci",
-  "env": [
-    {
-      "key": "NODE_ENV",
-      "value": "production"
-    }
-  ]
+  "installCommand": "npm ci"
 }
