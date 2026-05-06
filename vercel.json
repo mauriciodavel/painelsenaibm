@@ -3,11 +3,11 @@
   "devCommand": "npm run dev",
   "framework": "nextjs",
   "outputDirectory": ".next",
-  "installCommand": "npm install",
+  "installCommand": "npm ci",
   "env": [
     {
-      "key": "NEXT_PUBLIC_API_URL",
-      "value": "@VERCEL_URL"
+      "key": "NODE_ENV",
+      "value": "production"
     }
   ]
 }
