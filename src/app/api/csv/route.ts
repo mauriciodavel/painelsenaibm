@@ -37,6 +37,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Em produção (Vercel), não permite escrita de arquivos
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        { 
+          erro: 'Edições não disponíveis em produção. Use desenvolvimento local ou implemente banco de dados.', 
+          sucesso: false 
+        },
+        { status: 403 }
+      );
+    }
+
     const fullPath = getFullPath();
     await fs.writeFile(fullPath, conteudo, 'utf-8');
     

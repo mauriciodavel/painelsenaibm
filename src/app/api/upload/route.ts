@@ -4,6 +4,17 @@ import path from 'path';
 
 export async function POST(request: NextRequest) {
   try {
+    // Em produção (Vercel), não permite upload de arquivos
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        { 
+          erro: 'Upload não disponível em produção. Use desenvolvimento local ou implemente banco de dados.', 
+          sucesso: false 
+        },
+        { status: 403 }
+      );
+    }
+
     const formData = await request.formData();
     const arquivo = formData.get('arquivo') as File;
 
