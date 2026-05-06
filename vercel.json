@@ -1,0 +1,13 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "framework": "nextjs",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "env": [
+    {
+      "key": "NEXT_PUBLIC_API_URL",
+      "value": "@VERCEL_URL"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+:root {
+  --senai-primary: #164194;    /* Azul SENAÍ Institucional */
+  --senai-secondary: #e84910;  /* Laranja SENAÍ Institucional */
+  --senai-support-1: #43bdd9;  /* Ciano */
+  --senai-support-2: #4c3189;  /* Roxo */
+  --senai-support-3: #f3ab15;  /* Amarelo */
+  --senai-dark: #0f2d52;
+  --senai-gray: #1a3f6e;
+  --status-active: #4CAF50;
+  --status-inactive: #9E9E9E;
+  --status-available: #4CAF50;
+  --status-withdrawn: #e84910;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: linear-gradient(180deg, #0f2d52 0%, #164194 50%, #1a3f6e 100%);
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: linear-gradient(180deg, #0f2d52 0%, #164194 50%, #1a3f6e 100%);
+  color: #ffffff;
+  min-height: 100vh;
+}
