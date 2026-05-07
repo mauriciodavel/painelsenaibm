@@ -1,43 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { uploadCSVToStorage } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
-    // Em produção (Vercel), não permite upload de arquivos
-    if (process.env.NODE_ENV === 'production') {
-      return NextResponse.json(
-        { 
-          erro: 'Upload não disponível em produção. Use desenvolvimento local ou implemente banco de dados.', 
-          sucesso: false 
-        },
-        { status: 403 }
-      );
-    }
-
     const formData = await request.formData();
     const arquivo = formData.get('arquivo') as File;
 
     if (!arquivo) {
       return NextResponse.json(
-        { erro: 'Arquivo não fornecido' },
+        { erro: 'Arquivo não fornecido', sucesso: false },
         { status: 400 }
       );
     }
 
-    const conteudo = await arquivo.text();
-    const csvPath = path.join(process.cwd(), 'public', 'Consultar-Horário.csv');
+    // Validar se é um arquivo CSV
+    if (!arquivo.type.includes('text') && !arquivo.name.endsWith('.csv')) {
+      return NextResponse.json(
+        { erro: 'Apenas arquivos CSV são permitidos', sucesso: false },
+        { status: 400 }
+      );
+    }
+
+    const sucesso = await uploadCSVToStorage(arquivo);
     
-    await fs.writeFile(csvPath, conteudo, 'utf-8');
+    if (!sucesso) {
+      return NextResponse.json(
+        { erro: 'Erro ao fazer upload do CSV no Supabase Storage', sucesso: false },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ 
       sucesso: true, 
-      mensagem: 'CSV carregado e salvo com sucesso' 
+      mensagem: 'CSV carregado e salvo com sucesso no Supabase Storage' 
     });
   } catch (error) {
     console.error('Erro ao fazer upload do CSV:', error);
     return NextResponse.json(
-      { erro: 'Erro ao fazer upload do arquivo CSV' },
+      { erro: 'Erro ao fazer upload do arquivo CSV', sucesso: false },
       { status: 500 }
     );
   }

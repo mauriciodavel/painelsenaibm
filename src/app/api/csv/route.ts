@@ -1,24 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-const CSV_PATH = 'Consultar-Horário.csv';
-
-function getFullPath() {
-  // Em desenvolvimento e em produção, o CSV está na pasta public
-  if (process.env.NODE_ENV === 'production') {
-    return path.join(process.cwd(), 'public', CSV_PATH);
-  }
-  return path.join(process.cwd(), 'public', CSV_PATH);
-}
+import { getCSVFromStorage, saveCSVToStorage } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const fullPath = getFullPath();
-    const conteudo = await fs.readFile(fullPath, 'utf-8');
+    const conteudo = await getCSVFromStorage();
+    
+    if (!conteudo) {
+      return NextResponse.json(
+        { erro: 'Arquivo CSV não encontrado no Storage', sucesso: false },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json({ conteudo, sucesso: true });
   } catch (error) {
-    console.error('Erro ao ler CSV:', error);
+    console.error('Erro ao ler CSV do Supabase:', error);
     return NextResponse.json(
       { erro: 'Erro ao ler arquivo CSV', sucesso: false },
       { status: 500 }
@@ -37,23 +33,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Em produção (Vercel), não permite escrita de arquivos
-    if (process.env.NODE_ENV === 'production') {
+    const sucesso = await saveCSVToStorage(conteudo);
+    
+    if (!sucesso) {
       return NextResponse.json(
-        { 
-          erro: 'Edições não disponíveis em produção. Use desenvolvimento local ou implemente banco de dados.', 
-          sucesso: false 
-        },
-        { status: 403 }
+        { erro: 'Erro ao salvar CSV no Supabase Storage', sucesso: false },
+        { status: 500 }
       );
     }
 
-    const fullPath = getFullPath();
-    await fs.writeFile(fullPath, conteudo, 'utf-8');
-    
     return NextResponse.json({ 
       sucesso: true, 
-      mensagem: 'CSV salvo com sucesso' 
+      mensagem: 'CSV salvo com sucesso no Supabase Storage' 
     });
   } catch (error) {
     console.error('Erro ao salvar CSV:', error);
