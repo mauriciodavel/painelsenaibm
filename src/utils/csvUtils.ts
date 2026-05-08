@@ -1,5 +1,19 @@
 import { Aula, Turno, AulaExibicao } from './types';
 
+// Ordem fixa das colunas para manter consistência
+const COLUNAS_CSV: (keyof Aula)[] = [
+  'Data',
+  'Dia',
+  'Inicio',
+  'Fim',
+  'Turma / Tipo Reserva',
+  'Instrutor/Ambiente Reserva',
+  'Unidade Curricular / Solicitante',
+  'Ambiente Educacional / Justificativa',
+  'Tipo de Agenda',
+  'Chave Retirada',
+];
+
 export function parseCSV(csvContent: string): Aula[] {
   const lines = csvContent.split('\n').filter(line => line.trim());
   
@@ -18,6 +32,10 @@ export function parseCSV(csvContent: string): Aula[] {
       headers.forEach((header, index) => {
         aula[header] = values[index];
       });
+      // Garantir que o campo "Chave Retirada" existe
+      if (!aula['Chave Retirada']) {
+        aula['Chave Retirada'] = 'não';
+      }
       aulas.push(aula);
     }
   }
@@ -54,10 +72,9 @@ function parseCSVLine(line: string): string[] {
 }
 
 export function aulaToCSVLine(aula: Aula): string {
-  const keys = Object.keys(aula) as (keyof Aula)[];
-  return keys
+  return COLUNAS_CSV
     .map(key => {
-      const value = String(aula[key]);
+      const value = String(aula[key] || '');
       // Escape quotes and wrap in quotes if contains comma or quotes
       if (value.includes(',') || value.includes('"') || value.includes('\n')) {
         return `"${value.replace(/"/g, '""')}"`;
@@ -70,8 +87,7 @@ export function aulaToCSVLine(aula: Aula): string {
 export function aulaToCSV(aulas: Aula[]): string {
   if (aulas.length === 0) return '';
 
-  const headers = Object.keys(aulas[0]);
-  const headerLine = headers.map(h => `"${h}"`).join(',');
+  const headerLine = COLUNAS_CSV.map(h => `"${h}"`).join(',');
 
   const dataLines = aulas.map(aula => aulaToCSVLine(aula));
 
