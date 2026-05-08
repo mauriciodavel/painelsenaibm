@@ -16,10 +16,23 @@ interface TabelaAdminProps {
   onNovoRegistro?: (aula: Aula) => void;
 }
 
+const COLUNAS_ORDENADAS: (keyof Aula)[] = [
+  'Data',
+  'Dia',
+  'Inicio',
+  'Fim',
+  'Turma / Tipo Reserva',
+  'Instrutor/Ambiente Reserva',
+  'Unidade Curricular / Solicitante',
+  'Ambiente Educacional / Justificativa',
+  'Tipo de Agenda',
+];
+
 export default function TabelaAdmin({ aulas, onSalvar, onCarregar, onNovoRegistro }: TabelaAdminProps) {
   const [aulasExibidas, setAulasExibidas] = useState<Aula[]>(aulas);
   const [aulasEditadas, setAulasEditadas] = useState<Aula[]>(aulas);
   const [showNovoRegistro, setShowNovoRegistro] = useState(false);
+  const [edicaoCelula, setEdicaoCelula] = useState<{ index: number; coluna: keyof Aula; valor: string } | null>(null);
   const [novoRegistro, setNovoRegistro] = useState<Partial<Aula>>({
     Data: new Date().toLocaleDateString('pt-BR').split('/').reverse().join('-'),
     Dia: '',
@@ -80,6 +93,17 @@ export default function TabelaAdmin({ aulas, onSalvar, onCarregar, onNovoRegistr
         [coluna]: valor,
       };
       setAulasEditadas(novasAulas);
+    }
+  };
+
+  const handleCelulaMudancaLocal = (index: number, coluna: keyof Aula, valor: string) => {
+    setEdicaoCelula({ index, coluna, valor });
+  };
+
+  const handleCelulaBlur = (index: number, coluna: keyof Aula) => {
+    if (edicaoCelula && edicaoCelula.index === index && edicaoCelula.coluna === coluna) {
+      handleCelulaMudanca(index, coluna, edicaoCelula.valor);
+      setEdicaoCelula(null);
     }
   };
 
@@ -230,21 +254,11 @@ export default function TabelaAdmin({ aulas, onSalvar, onCarregar, onNovoRegistr
         <table className="w-full border-collapse bg-white rounded-lg shadow-lg">
           <thead>
             <tr className="text-white" style={{ backgroundColor: 'var(--senai-primary)' }}>
-              {[
-                'Data',
-                'Dia',
-                'Inicio',
-                'Fim',
-                'Turma / Tipo Reserva',
-                'Instrutor/Ambiente Reserva',
-                'Unidade Curricular / Solicitante',
-                'Ambiente Educacional / Justificativa',
-                'Chave Retirada',
-              ].map(coluna => (
+              {COLUNAS_ORDENADAS.map(coluna => (
                 <th
                   key={coluna}
-                  onClick={() => coluna !== 'Chave Retirada' && handleColunaClick(coluna as keyof Aula)}
-                  className={`px-3 py-2 text-left text-xs font-semibold ${coluna !== 'Chave Retirada' ? 'cursor-pointer hover:bg-blue-700' : ''} transition-colors`}
+                  onClick={() => handleColunaClick(coluna)}
+                  className="px-3 py-2 text-left text-xs font-semibold cursor-pointer hover:bg-blue-700 transition-colors"
                 >
                   {coluna}
                   {filtro.ordenacao.coluna === coluna && (
@@ -254,6 +268,7 @@ export default function TabelaAdmin({ aulas, onSalvar, onCarregar, onNovoRegistr
                   )}
                 </th>
               ))}
+              <th className="px-3 py-2 text-left text-xs font-semibold">Chave Retirada</th>
               <th className="px-3 py-2 text-left text-xs font-semibold">Ações</th>
             </tr>
           </thead>
@@ -262,7 +277,7 @@ export default function TabelaAdmin({ aulas, onSalvar, onCarregar, onNovoRegistr
               const chaveRetirada = aula['Chave Retirada'] === 'sim' || aula['Chave Retirada'] === 'Sim';
               return (
                 <tr
-                  key={index}
+                  key={`row-${index}-${aula.Data}-${aula.Dia}`}
                   className={`border-b transition-colors ${
                     chaveRetirada 
                       ? 'bg-green-100 hover:bg-green-200' 
@@ -271,24 +286,30 @@ export default function TabelaAdmin({ aulas, onSalvar, onCarregar, onNovoRegistr
                         : 'bg-white hover:bg-blue-50'
                   }`}
                 >
-                  {Object.entries(aula)
-                    .filter(([coluna]) => coluna !== 'Chave Retirada')
-                    .map(([coluna, valor]) => (
+                  {COLUNAS_ORDENADAS.map((coluna) => {
+                    const estaEmEdicao = edicaoCelula?.index === index && edicaoCelula?.coluna === coluna;
+                    const valorExibido = estaEmEdicao ? edicaoCelula.valor : String(aula[coluna] || '');
+                    
+                    return (
                       <td
-                        key={coluna}
+                        key={`cell-${index}-${coluna}`}
                         className="px-3 py-2 text-xs text-gray-800 border border-gray-200"
                       >
                         <input
                           type="text"
-                          value={String(valor)}
+                          value={valorExibido}
                           onChange={(e) =>
-                            handleCelulaMudanca(index, coluna as keyof Aula, e.target.value)
+                            handleCelulaMudancaLocal(index, coluna, e.target.value)
+                          }
+                          onBlur={() =>
+                            handleCelulaBlur(index, coluna)
                           }
                           className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2"
                           style={{ borderColor: '#ddd' }}
                         />
                       </td>
-                    ))}
+                    );
+                  })}
                   {/* Coluna Chave Retirada com Checkbox */}
                   <td className="px-3 py-2 text-xs text-gray-800 border border-gray-200">
                     <div className="flex items-center justify-center">
