@@ -30,6 +30,7 @@ export default function TabelaAdmin({ aulas, onSalvar, onCarregar, onNovoRegistr
     'Unidade Curricular / Solicitante': '',
     'Ambiente Educacional / Justificativa': '',
     'Tipo de Agenda': '',
+    'Chave Retirada': '',
   });
   const [filtro, setFiltro] = useState<FiltroAdmin>({
     dataInicio: obterDataAtual(),
@@ -82,6 +83,20 @@ export default function TabelaAdmin({ aulas, onSalvar, onCarregar, onNovoRegistr
     }
   };
 
+  const handleMarcarChave = (index: number, marcado: boolean) => {
+    const novasAulas = [...aulasEditadas];
+    const aulaNoExibidas = aulasExibidas[index];
+    const indexOriginal = aulasEditadas.indexOf(aulaNoExibidas);
+    
+    if (indexOriginal !== -1) {
+      novasAulas[indexOriginal] = {
+        ...novasAulas[indexOriginal],
+        'Chave Retirada': marcado ? 'sim' : 'não',
+      };
+      setAulasEditadas(novasAulas);
+    }
+  };
+
   const handleSalvar = () => {
     onSalvar(aulasEditadas);
     alert('Dados salvos com sucesso!');
@@ -119,6 +134,7 @@ export default function TabelaAdmin({ aulas, onSalvar, onCarregar, onNovoRegistr
       'Unidade Curricular / Solicitante': novoRegistro['Unidade Curricular / Solicitante'] as string,
       'Ambiente Educacional / Justificativa': novoRegistro['Ambiente Educacional / Justificativa'] as string,
       'Tipo de Agenda': novoRegistro['Tipo de Agenda'] as string,
+      'Chave Retirada': novoRegistro['Chave Retirada'] as string,
     };
 
     const updatedAulas = [...aulasEditadas, novaAula];
@@ -135,6 +151,7 @@ export default function TabelaAdmin({ aulas, onSalvar, onCarregar, onNovoRegistr
       'Unidade Curricular / Solicitante': '',
       'Ambiente Educacional / Justificativa': '',
       'Tipo de Agenda': '',
+      'Chave Retirada': '',
     });
     alert('Novo registro adicionado com sucesso e salvo!');
   };
@@ -222,11 +239,12 @@ export default function TabelaAdmin({ aulas, onSalvar, onCarregar, onNovoRegistr
                 'Instrutor/Ambiente Reserva',
                 'Unidade Curricular / Solicitante',
                 'Ambiente Educacional / Justificativa',
+                'Chave Retirada',
               ].map(coluna => (
                 <th
                   key={coluna}
-                  onClick={() => handleColunaClick(coluna as keyof Aula)}
-                  className="px-3 py-2 text-left text-xs font-semibold cursor-pointer hover:bg-blue-700 transition-colors"
+                  onClick={() => coluna !== 'Chave Retirada' && handleColunaClick(coluna as keyof Aula)}
+                  className={`px-3 py-2 text-left text-xs font-semibold ${coluna !== 'Chave Retirada' ? 'cursor-pointer hover:bg-blue-700' : ''} transition-colors`}
                 >
                   {coluna}
                   {filtro.ordenacao.coluna === coluna && (
@@ -240,39 +258,61 @@ export default function TabelaAdmin({ aulas, onSalvar, onCarregar, onNovoRegistr
             </tr>
           </thead>
           <tbody>
-            {aulasExibidas.map((aula, index) => (
-              <tr
-                key={index}
-                className={`border-b ${
-                  index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
-                } hover:bg-blue-50`}
-              >
-                {Object.entries(aula).map(([coluna, valor]) => (
-                  <td
-                    key={coluna}
-                    className="px-3 py-2 text-xs text-gray-800 border border-gray-200"
-                  >
-                    <input
-                      type="text"
-                      value={String(valor)}
-                      onChange={(e) =>
-                        handleCelulaMudanca(index, coluna as keyof Aula, e.target.value)
-                      }
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2"
-                      style={{ borderColor: '#ddd' }}
-                    />
+            {aulasExibidas.map((aula, index) => {
+              const chaveRetirada = aula['Chave Retirada'] === 'sim' || aula['Chave Retirada'] === 'Sim';
+              return (
+                <tr
+                  key={index}
+                  className={`border-b transition-colors ${
+                    chaveRetirada 
+                      ? 'bg-green-100 hover:bg-green-200' 
+                      : index % 2 === 0 
+                        ? 'bg-gray-50 hover:bg-blue-50'
+                        : 'bg-white hover:bg-blue-50'
+                  }`}
+                >
+                  {Object.entries(aula)
+                    .filter(([coluna]) => coluna !== 'Chave Retirada')
+                    .map(([coluna, valor]) => (
+                      <td
+                        key={coluna}
+                        className="px-3 py-2 text-xs text-gray-800 border border-gray-200"
+                      >
+                        <input
+                          type="text"
+                          value={String(valor)}
+                          onChange={(e) =>
+                            handleCelulaMudanca(index, coluna as keyof Aula, e.target.value)
+                          }
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2"
+                          style={{ borderColor: '#ddd' }}
+                        />
+                      </td>
+                    ))}
+                  {/* Coluna Chave Retirada com Checkbox */}
+                  <td className="px-3 py-2 text-xs text-gray-800 border border-gray-200">
+                    <div className="flex items-center justify-center">
+                      <input
+                        type="checkbox"
+                        checked={chaveRetirada}
+                        onChange={(e) =>
+                          handleMarcarChave(index, e.target.checked)
+                        }
+                        className="w-5 h-5 cursor-pointer accent-green-600"
+                      />
+                    </div>
                   </td>
-                ))}
-                <td className="px-3 py-2 text-xs text-gray-800 border border-gray-200">
-                  <button
-                    onClick={() => handleDelete(index)}
-                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors font-semibold text-xs w-full"
-                  >
-                    Deletar
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  <td className="px-3 py-2 text-xs text-gray-800 border border-gray-200">
+                    <button
+                      onClick={() => handleDelete(index)}
+                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors font-semibold text-xs w-full"
+                    >
+                      Deletar
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -390,6 +430,17 @@ export default function TabelaAdmin({ aulas, onSalvar, onCarregar, onNovoRegistr
                 onChange={(e) => setNovoRegistro({...novoRegistro, 'Tipo de Agenda': e.target.value})}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Chave Retirada</label>
+              <select
+                value={novoRegistro['Chave Retirada'] || 'não'}
+                onChange={(e) => setNovoRegistro({...novoRegistro, 'Chave Retirada': e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+              >
+                <option value="não">Não</option>
+                <option value="sim">Sim</option>
+              </select>
             </div>
           </div>
           <div className="flex gap-3 justify-center">

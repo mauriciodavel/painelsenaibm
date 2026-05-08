@@ -8,6 +8,7 @@ export interface Aula {
   "Unidade Curricular / Solicitante": string;
   "Ambiente Educacional / Justificativa": string;
   "Tipo de Agenda": string;
+  "Chave Retirada"?: string;
 }
 
 export interface AulaExibicao extends Omit<Aula, 'Inicio' | 'Fim'> {
